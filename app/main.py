@@ -122,8 +122,9 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--directory',nargs="?",const="./")
+    parser.add_argument('--directory',nargs="?",default="./")
     args = parser.parse_args()
     if args.directory!=None:
         args.directory = args.directory[:-1] # remove last /
+    print(args.directory)
     main(args)
