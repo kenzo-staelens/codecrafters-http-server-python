@@ -87,7 +87,7 @@ class GetRequestHandler(RequestHandler):
 class HandlerThread:
     def __init__(self,handler, conn, addr):
         self.thread = threading.Thread(
-            target=handleRequest, args=(conn, addr)
+            target=handler, args=(conn, addr)
         ).start()
 
 def handler(conn, addr):
