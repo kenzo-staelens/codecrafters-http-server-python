@@ -87,7 +87,7 @@ class GetRequestHandler(RequestHandler):
         if request.path=="/":
             resp = HTTPResponse(200)
         elif CODECRAFTERS:
-            resp = codeCrafters(request,self.args)
+            resp = codeCraftersGet(request,self.args)
         
         if resp == None:
             resp = HTTPResponse(404)
