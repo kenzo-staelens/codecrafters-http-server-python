@@ -68,7 +68,7 @@ class HandlerThread:
                 resp = HTTPResponse(500, content=str(e))
             self.sendall(conn, resp)
 
-    def sendall(conn, msg):
+    def sendall(self, conn, msg):
         if type(msg)!=HTTPResponse:
             raise ValueError("")
         conn.sendall(repr(msg).encode("utf-8"))
