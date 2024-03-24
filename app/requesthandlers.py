@@ -51,7 +51,7 @@ class HTTPRequestHandler:
     def __post_init__(self):
         if self.methods == None:
             self.methods = ["GET"]
-        for method in self.methods
+        for method in self.methods:
             self.handlers[method]=methodHandlers[method](self.args, self.codecraftersfns[method])
     
     def handleRequest(self, request: HTTPRequest) -> Status:
