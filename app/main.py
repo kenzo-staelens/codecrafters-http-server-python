@@ -1,122 +1,13 @@
-from dataclasses import dataclass, field, KW_ONLY
-from typing import List, Dict
 import os
 import argparse
 import socket
 import threading
+from dataclasses import dataclass, field, KW_ONLY
+from typing import List, Dict
+from .requesthandlers import *
+
 
 CODECRAFTERS = True
-RESPONSECODES = {
-    200: "OK",
-    201: "CREATED",
-    404: "NOT FOUND",
-    415: "METHOD NOT ALLOWED",
-    500: "INTERNAL SERVER ERROR"
-}
-
-@dataclass
-class HTTPRequest:
-    request:str
-    method: str = field(init=False)
-    path: str = field(init=False)
-    version: str = field(init=False)
-    headers: List[str] = field(default_factory=list)
-    
-    def __post_init__(self):
-        try:
-            request,body = self.request.strip().split("\r\n"*2)
-            self.body = body
-        except:
-            request = self.request.strip()
-            self.body = ""
-        request = request.split("\r\n")
-        self.request = request[0]
-        requestline = request[0].split()
-        self.method = requestline[0]
-        self.path = requestline[1]
-        self.version = requestline[1]
-        self.headers = {(kv:=request.split(": "))[0]:kv[1] for request in request[1:]}
-
-@dataclass
-class Status:
-    code: int
-    
-    def __repr__(self):
-        return f"HTTP/1.1 {self.code} {RESPONSECODES[self.code]}"
-
-class HTTPResponse:
-    def __init__(self, status, *, content="", **headers):
-        self.status: Status = Status(status)
-        self.content: str = content
-        self.headers: Dict[str, str] = headers
-        
-    def __repr__(self):
-        self.headers |= {"Content-Length":len(self.content)}
-        headers = [f"\r\n{k}: {v}" for k,v in self.headers.items()]
-        headers = "".join(headers)
-        return f"{self.status}{headers}\r\n\r\n{self.content}"
-
-class RequestHandler:
-    def __new__(cls, args):
-        instance = super().__new__(cls)
-        instance.args = args
-        instance.method = None
-        return instance
-    
-    def handleRequest(self, request: HTTPRequest) -> Status:
-        if request.method !=self.method:
-            raise ValueError("not a GET method")
-        return self._handleRequest(request)
-
-@dataclass
-class HTTPRequestHandler:
-    methods: List[str] = None
-    _: KW_ONLY
-    args: argparse.Namespace = field(default_factory=argparse.Namespace)
-    handlers: Dict[str,RequestHandler] = field(default_factory=dict)
-    
-    def __post_init__(self):
-        if self.methods == None:
-            self.methods = ["GET"]
-        if "GET" in self.methods:
-            self.handlers["GET"]=GetRequestHandler(self.args)
-        if "POST" in self.methods:
-            self.handlers["POST"]=PostRequestHandler(self.args)
-    
-    def handleRequest(self, request: HTTPRequest) -> Status:
-        handler = self.handlers.get(request.method)
-        if handler:
-            return handler.handleRequest(request)
-        return HTTPResponse(415)
-
-class GetRequestHandler(RequestHandler):
-    def __init__(self,args):
-        self.method = "GET"
-    
-    def _handleRequest(self, request: HTTPRequest) -> Status:
-        if request.path=="/":
-            resp = HTTPResponse(200)
-        elif CODECRAFTERS:
-            resp = codeCraftersGet(request,self.args)
-        
-        if resp == None:
-            resp = HTTPResponse(404)
-        return resp
-
-class PostRequestHandler(RequestHandler):
-    def __init__(self,args):
-        self.method = "POST"
-    
-    def _handleRequest(self, request: HTTPRequest) -> Status:
-        return codeCraftersPost(request,self.args)
-
-def codeCraftersPost(request, args):
-    if request.path.startswith("/files"):
-        msg = request.path[6:] #strip /files
-        _path = args.directory + msg
-        with open(_path,"w") as f:
-            f.write(request.body)
-        return HTTPResponse(201)
 
 def codeCraftersGet(request,args):
     path = request.path
@@ -147,32 +38,44 @@ def codeCraftersGet(request,args):
             resp = HTTPResponse(200,content=content,**headers)
     return resp
 
+def codeCraftersPost(request, args):
+    if request.path.startswith("/files"):
+        msg = request.path[6:] #strip /files
+        _path = args.directory + msg
+        with open(_path,"w") as f:
+            f.write(request.body)
+        return HTTPResponse(201)
+
+functiondict = {
+    "GET": codeCraftersGet,
+    "POST": codeCraftersPost
+}
+
 class HandlerThread:
     def __init__(self,handler, conn, addr,args):
         self.thread = threading.Thread(
-            target=handler, args=(conn, addr,args)
+            target=self.handler, args=(conn, addr,args)
         ).start()
+    
+    def handler(con, addr, requestHandler):
+        with conn:
+            data = conn.recv(1024).decode("utf-8")
+            if data:
+                req = HTTPRequest(data)
+            try:
+                resp = requestHandler.handleRequest(req)
+            except Exception as e:
+                resp = HTTPResponse(500, content=str(e))
+            self.sendall(conn, resp)
 
-def handler(conn, addr,requestHandler):
-    with conn:
-        data = conn.recv(1024).decode("utf-8")
-        if data:
-            req = HTTPRequest(data)
-        try:
-            resp = requestHandler.handleRequest(req)
-        except Exception as e:
-            print(e)
-            resp = HTTPResponse(500, content=str(e))
-        conn_sendall(conn, resp)
-
-def conn_sendall(conn, msg):
-    if type(msg)!=HTTPResponse:
-        raise ValueError("")
-    conn.sendall(repr(msg).encode("utf-8"))
+    def sendall(conn, msg):
+        if type(msg)!=HTTPResponse:
+            raise ValueError("")
+        conn.sendall(repr(msg).encode("utf-8"))
 
 def main(args):
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
-    requestHandler = HTTPRequestHandler(methods=["GET","POST"],args=args)
+    requestHandler = HTTPRequestHandler(methods=["GET","POST"],args=args,codecraftersfns = functiondict)
     while True:
         conn, addr = server_socket.accept()
         HandlerThread(handler, conn,addr,requestHandler)
