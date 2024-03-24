@@ -68,7 +68,7 @@ class GetRequestHandler(RequestHandler):
             raise ValueError("not a GET method")
         if request.path=="/":
             return HTTPResponse(200)
-        if CODECRAFTERS and path.startswith("/echo/"):
+        if CODECRAFTERS and request.path.startswith("/echo/"):
             return codeCraftersResponse(request)
         
         return HTTPResponse(404)
