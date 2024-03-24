@@ -41,9 +41,9 @@ class GetRequestHandler(RequestHandler):
         pass
     
     def handleRequest(self, request: HTTPRequest) -> Status:
-        if request.method !="GET":
+        if request.method !=b"GET":
             raise ValueError("not a GET method")
-        if request.path=="/":
+        if request.path==b"/":
             return HTTPResponse(200)
         
         return HTTPResponse(404)
