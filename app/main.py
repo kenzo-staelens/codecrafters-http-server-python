@@ -76,11 +76,12 @@ class GetRequestHandler(RequestHandler):
         if request.method !="GET":
             raise ValueError("not a GET method")
         if request.path=="/":
-            return HTTPResponse(200)
+            resp = HTTPResponse(200)
         if CODECRAFTERS:
-            return codeCraftersResponse(request)
+            resp = codeCraftersResponse(request)
         if resp==None:
-            return HTTPResponse(404)
+            resp = HTTPResponse(404)
+        return resp
 
 def conn_sendall(conn, msg):
     conn.sendall(repr(msg).encode("utf-8"))
@@ -92,11 +93,10 @@ def main():
         data = conn.recv(1024)
         if data:
             req = HTTPRequest(data)
-        # try:
-        response = GetRequestHandler.handleRequest(req)
-        # except Exception as e:
-            # print(e)
-            # response = HTTPResponse(500, content=str(e))
+        try:
+            response = GetRequestHandler.handleRequest(req)
+        except Exception as e:
+            response = HTTPResponse(500, content=str(e))
         conn_sendall(conn, response)
 
 if __name__ == "__main__":
