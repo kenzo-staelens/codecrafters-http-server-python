@@ -87,13 +87,23 @@ class GetRequestHandler(RequestHandler):
         if request.path=="/":
             resp = HTTPResponse(200)
         elif CODECRAFTERS:
-            resp = codeCraftersResponse(request)
+            resp = codeCrafters(request,self.args)
         
         if resp == None:
             resp = HTTPResponse(404)
         return resp
 
-def codeCraftersResponse(request):
+class PostRequestHandler(RequestHandler):
+    def __init__(self,args):
+        self.method = "POST"
+    
+    def _handleRequest(self, request: HTTPRequest) -> Status:
+        pass
+
+def codeCraftersPost(request, args):
+    pass
+
+def codeCraftersGet(request,args):
     path = request.path
     resp = None
     if path.startswith("/echo/"):
@@ -114,7 +124,7 @@ def codeCraftersResponse(request):
         resp = HTTPResponse(200,content=msg,**headers)
     elif path.startswith("/files/"):
         msg = request.path[6:] #strip /files
-        _path = self.args.directory + request.path.strip("/files")
+        _path = args.directory + request.path.strip("/files")
         if os.path.exists(_path):
             headers = {"Content-Type":"application/octet-stream"}
             with open(_path,"r") as f:
