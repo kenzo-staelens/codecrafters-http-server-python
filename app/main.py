@@ -52,7 +52,7 @@ functiondict = {
 }
 
 class HandlerThread:
-    def __init__(self,handler, conn, addr,args):
+    def __init__(self, conn, addr,args):
         self.thread = threading.Thread(
             target=self.handler, args=(conn, addr,args)
         ).start()
@@ -78,7 +78,7 @@ def main(args):
     requestHandler = HTTPRequestHandler(methods=["GET","POST"],args=args,codecraftersfns = functiondict)
     while True:
         conn, addr = server_socket.accept()
-        HandlerThread(handler, conn,addr,requestHandler)
+        HandlerThread(conn,addr,requestHandler)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
