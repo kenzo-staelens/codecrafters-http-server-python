@@ -77,8 +77,9 @@ class GetRequestHandler(RequestHandler):
             raise ValueError("not a GET method")
         if request.path=="/":
             resp = HTTPResponse(200)
-        if CODECRAFTERS:
+        elif CODECRAFTERS:
             resp = codeCraftersResponse(request)
+        
         if resp==None:
             resp = HTTPResponse(404)
         return resp
