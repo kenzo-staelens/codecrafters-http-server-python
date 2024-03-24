@@ -25,8 +25,10 @@ class HTTPRequest:
     def __post_init__(self):
         try:
             request,body = self.request.strip().split("\r\n"*2)
+            self.body = body
         except:
             request = self.request.strip()
+            self.body = ""
         request = request.split("\r\n")
         self.request = request[0]
         requestline = request[0].split()
