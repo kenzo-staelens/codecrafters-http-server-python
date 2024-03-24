@@ -108,7 +108,7 @@ class PostRequestHandler(RequestHandler):
         self.method = "POST"
     
     def _handleRequest(self, request: HTTPRequest) -> Status:
-        codeCraftersPost(request,self.args)
+        return codeCraftersPost(request,self.args)
 
 def codeCraftersPost(request, args):
     if request.path.startswith("/files"):
