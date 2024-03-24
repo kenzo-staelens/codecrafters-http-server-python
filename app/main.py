@@ -50,7 +50,6 @@ class RequestHandler:
 
 def codeCraftersResponse(request):
     path = request.path
-    print(request)
     resp = None
     if path.startswith("/echo/"):
         msg = request.path[6:] #strip off /echo/
@@ -92,6 +91,7 @@ def main():
     while True:
         conn, addr = server_socket.accept()
         with conn:
+            print("*"*20,addr)
             data = conn.recv(1024)
             if data:
                 req = HTTPRequest(data)
