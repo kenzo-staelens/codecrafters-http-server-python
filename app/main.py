@@ -123,5 +123,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory')
     args = parser.parse_args()
-    args.directory = "C:/Users/UViON/Desktop/webserver/codecrafters-http-server-python/app"
+    args.directory = args.directory[:-1] # remove last /
     main(args)
