@@ -83,16 +83,11 @@ class GetRequestHandler(RequestHandler):
         elif CODECRAFTERS:
             resp = codeCraftersResponse(request)
         if resp == None:
-            path = self.args.directory + request.path.strip("/files/")
-            print(path)
+            path = self.args.directory + request.path.strip("/files")
             if os.path.exists(path):
-                print("ok")
-            try:
                 headers = {"Content-Type":"application/octet-stream"}
                 with open(path,"r") as f:
                     resp = HTTPResponse(200,content=f.read(),**headers)
-            except Exception as e:
-                print(e)
         if resp == None:
             resp = HTTPResponse(404)
         return resp
