@@ -84,10 +84,15 @@ class GetRequestHandler(RequestHandler):
             resp = codeCraftersResponse(request)
         if resp == None:
             path = self.args.directory + request.path
+            print(path)
             if os.path.exists(path):
+                print("ok")
+            try:
                 headers = {"Content-Type":"application/octet-stream"}
                 with open(path,"r") as f:
-                    resp = HTTPResponse(200,content=f.read())
+                    resp = HTTPResponse(200,content=f.read(),**headers)
+            except Exception as e:
+                print(e)
         if resp == None:
             resp = HTTPResponse(404)
         return resp
@@ -126,5 +131,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.directory!=None:
         args.directory = args.directory[:-1] # remove last /
-    print(args.directory)
     main(args)
