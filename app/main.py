@@ -44,7 +44,7 @@ class HTTPResponse:
         self.headers: Dict[str, str] = headers
         
     def __repr__(self):
-        headers |= {"Content-Length":len(self.content)}
+        self.headers |= {"Content-Length":len(self.content)}
         headers = [f"\r\n{k}: {v}" for k,v in self.headers.items()]
         headers = "".join(headers)
         return f"{self.status}{headers}\r\n\r\n{self.content}"
@@ -89,6 +89,7 @@ class GetRequestHandler(RequestHandler):
     def _handleRequest(self, request: HTTPRequest) -> Status:
         if request.path=="/":
             resp = HTTPResponse(200)
+            print(resp)
         elif CODECRAFTERS:
             resp = codeCraftersGet(request,self.args)
         
