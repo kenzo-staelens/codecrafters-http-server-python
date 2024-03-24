@@ -107,6 +107,7 @@ def handler(conn, addr,args):
         try:
             resp = getHandler.handleRequest(req)
         except Exception as e:
+            print(e)
             resp = HTTPResponse(500, content=str(e))
         conn_sendall(conn, resp)
 
