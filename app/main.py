@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Dict
+import os
+import argparse
 import socket
 import threading
 
@@ -71,7 +73,9 @@ def codeCraftersResponse(request):
     return resp
 
 class GetRequestHandler(RequestHandler):
-    @classmethod
+    def __init__(self, args):
+        self.args = args
+    
     def handleRequest(self, request: HTTPRequest) -> Status:
         if request.method !="GET":
             raise ValueError("not a GET method")
@@ -79,25 +83,29 @@ class GetRequestHandler(RequestHandler):
             resp = HTTPResponse(200)
         elif CODECRAFTERS:
             resp = codeCraftersResponse(request)
-        
-        if resp==None:
+        if resp == None:
+            print(self.args.directory + request.path)
+            if os.path.exists(self.args.directory + request.path):
+                resp = HTTPResponse(200)
+        if resp == None:
             resp = HTTPResponse(404)
         return resp
 
 class HandlerThread:
-    def __init__(self,handler, conn, addr):
+    def __init__(self,handler, conn, addr,args):
         self.thread = threading.Thread(
-            target=handler, args=(conn, addr)
+            target=handler, args=(conn, addr,args)
         ).start()
 
-def handler(conn, addr):
+def handler(conn, addr,args):
+    getHandler = GetRequestHandler(args)
     with conn:
         data = conn.recv(1024)
         print("*"*20,addr,data)
         if data:
             req = HTTPRequest(data)
         try:
-            response = GetRequestHandler.handleRequest(req)
+            response = getHandler.handleRequest(req)
         except Exception as e:
             resp = HTTPResponse(500, content=str(e))
         conn_sendall(conn, response)
@@ -105,11 +113,13 @@ def handler(conn, addr):
 def conn_sendall(conn, msg):
     conn.sendall(repr(msg).encode("utf-8"))
 
-def main():
+def main(args):
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
     while True:
         conn, addr = server_socket.accept()
-        HandlerThread(handler, conn,addr)
+        HandlerThread(handler, conn,addr,args)
 
 if __name__ == "__main__":
-    main()
+    parser.add_argument('-d', '--directory')
+    args = parser.parse_args()
+    main(args)
