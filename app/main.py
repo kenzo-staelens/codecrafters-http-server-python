@@ -44,6 +44,7 @@ class HTTPResponse:
         self.headers: Dict[str, str] = headers
         
     def __repr__(self):
+        headers |= {"Content-Length":len(self.content)}
         headers = [f"\r\n{k}: {v}" for k,v in self.headers.items()]
         headers = "".join(headers)
         return f"{self.status}{headers}\r\n\r\n{self.content}"
@@ -112,25 +113,26 @@ def codeCraftersGet(request,args):
         msg = request.path[6:] #strip off /echo/
         length = len(msg)
         headers = {
-            "Content-Type": "text/plain",
-            "Content-Length": str(length)
+            "Content-Type": "text/plain"
         }
         resp = HTTPResponse(200, content=msg, **headers)
     elif path.startswith("/user-agent"):
         msg = request.headers.get("User-Agent")
         length = len(msg)
         headers = {
-            "Content-Type": "text/plain",
-            "Content-Length": str(length)
+            "Content-Type": "text/plain"
         }
         resp = HTTPResponse(200,content=msg,**headers)
     elif path.startswith("/files/"):
         msg = request.path[6:] #strip /files
         _path = args.directory + msg
         if os.path.exists(_path):
-            headers = {"Content-Type":"application/octet-stream"}
             with open(_path,"r") as f:
-                resp = HTTPResponse(200,content=f.read(),**headers)
+                content = f.read()
+            headers = {
+                "Content-Type":"application/octet-stream"
+            }
+            resp = HTTPResponse(200,content=content,**headers)
     return resp
 
 class HandlerThread:
