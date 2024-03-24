@@ -126,8 +126,7 @@ def codeCraftersGet(request,args):
         resp = HTTPResponse(200,content=msg,**headers)
     elif path.startswith("/files/"):
         msg = request.path[6:] #strip /files
-        _path = args.directory + request.path.strip("/files")
-        print(_path,request.path,request.path.strip("/files"))
+        _path = args.directory + msg
         if os.path.exists(_path):
             headers = {"Content-Type":"application/octet-stream"}
             with open(_path,"r") as f:
