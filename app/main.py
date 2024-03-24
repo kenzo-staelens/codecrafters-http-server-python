@@ -3,8 +3,8 @@ import argparse
 import socket
 import threading
 from typing import List, Dict
-from .requesthandlers import *
-from .data import *
+from requesthandlers import *
+from data import *
 
 
 CODECRAFTERS = True
@@ -57,7 +57,7 @@ class HandlerThread:
             target=self.handler, args=(conn, addr,args)
         ).start()
     
-    def handler(_,conn, addr, requestHandler):
+    def handler(self,conn, addr, requestHandler):
         with conn:
             data = conn.recv(1024).decode("utf-8")
             if data:
@@ -71,6 +71,7 @@ class HandlerThread:
     def sendall(self, conn, msg):
         if type(msg)!=HTTPResponse:
             raise ValueError("")
+        print(msg)
         conn.sendall(repr(msg).encode("utf-8"))
 
 def main(args):
