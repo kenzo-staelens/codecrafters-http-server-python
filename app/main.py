@@ -72,6 +72,8 @@ class HTTPRequestHandler:
             self.methods = ["GET"]
         if "GET" in self.methods:
             self.handlers["GET"]=GetRequestHandler(self.args)
+        if "POST" in self.methods:
+            self.handlers["POST"]=PostRequestHandler(self.args)
     
     def handleRequest(self, request: HTTPRequest) -> Status:
         handler = self.handlers.get(request.method)
@@ -125,6 +127,7 @@ def codeCraftersGet(request,args):
     elif path.startswith("/files/"):
         msg = request.path[6:] #strip /files
         _path = args.directory + request.path.strip("/files")
+        print(_path)
         if os.path.exists(_path):
             headers = {"Content-Type":"application/octet-stream"}
             with open(_path,"r") as f:
@@ -156,7 +159,7 @@ def conn_sendall(conn, msg):
 
 def main(args):
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
-    requestHandler = HTTPRequestHandler(args=args)
+    requestHandler = HTTPRequestHandler(methods=["GET","POST"]args=args)
     while True:
         conn, addr = server_socket.accept()
         HandlerThread(handler, conn,addr,requestHandler)
