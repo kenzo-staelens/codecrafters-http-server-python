@@ -91,14 +91,14 @@ def main():
     while True:
         conn, addr = server_socket.accept()
         with conn:
-            print("*"*20,addr)
             data = conn.recv(1024)
+            print("*"*20,addr,data)
             if data:
                 req = HTTPRequest(data)
             try:
                 response = GetRequestHandler.handleRequest(req)
             except Exception as e:
-                response = HTTPResponse(500, content=str(e))
+                resp = HTTPResponse(500, content=str(e))
             conn_sendall(conn, response)
 
 if __name__ == "__main__":
