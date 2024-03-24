@@ -21,8 +21,7 @@ class HTTPRequest:
     headers: List[str] = field(default_factory=list)
     
     def __post_init__(self):
-        request = self.request.strip().split(b"\r\n")
-        request = [x.decode("utf-8") for x in request]
+        request = self.request.strip().split("\r\n")
         self.request = request[0]
         requestline = request[0].split()
         self.method = requestline[0]
@@ -84,9 +83,11 @@ class GetRequestHandler(RequestHandler):
         elif CODECRAFTERS:
             resp = codeCraftersResponse(request)
         if resp == None:
-            print(self.args.directory + request.path)
-            if os.path.exists(self.args.directory + request.path):
-                resp = HTTPResponse(200)
+            path = self.args.directory + request.path
+            if os.path.exists(path):
+                headers = {"Content-Type":"application/octet-stream"}
+                with open(path,"r") as f:
+                    resp = HTTPResponse(200,content=f.read())
         if resp == None:
             resp = HTTPResponse(404)
         return resp
@@ -100,15 +101,14 @@ class HandlerThread:
 def handler(conn, addr,args):
     getHandler = GetRequestHandler(args)
     with conn:
-        data = conn.recv(1024)
-        print("*"*20,addr,data)
+        data = conn.recv(1024).decode("utf-8")
         if data:
             req = HTTPRequest(data)
         try:
-            response = getHandler.handleRequest(req)
+            resp = getHandler.handleRequest(req)
         except Exception as e:
             resp = HTTPResponse(500, content=str(e))
-        conn_sendall(conn, response)
+        conn_sendall(conn, resp)
 
 def conn_sendall(conn, msg):
     conn.sendall(repr(msg).encode("utf-8"))
@@ -120,6 +120,8 @@ def main(args):
         HandlerThread(handler, conn,addr,args)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory')
     args = parser.parse_args()
+    args.directory = "C:/Users/UViON/Desktop/webserver/codecrafters-http-server-python/app"
     main(args)
