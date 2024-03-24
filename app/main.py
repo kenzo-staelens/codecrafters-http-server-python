@@ -89,16 +89,17 @@ def conn_sendall(conn, msg):
 
 def main():
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
-    conn, addr = server_socket.accept()
-    with conn:
-        data = conn.recv(1024)
-        if data:
-            req = HTTPRequest(data)
-        try:
-            response = GetRequestHandler.handleRequest(req)
-        except Exception as e:
-            response = HTTPResponse(500, content=str(e))
-        conn_sendall(conn, response)
+    while True:
+        conn, addr = server_socket.accept()
+        with conn:
+            data = conn.recv(1024)
+            if data:
+                req = HTTPRequest(data)
+            try:
+                response = GetRequestHandler.handleRequest(req)
+            except Exception as e:
+                response = HTTPResponse(500, content=str(e))
+            conn_sendall(conn, response)
 
 if __name__ == "__main__":
     main()
