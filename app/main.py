@@ -22,7 +22,8 @@ class HTTPRequest:
     headers: List[str] = field(default_factory=list)
     
     def __post_init__(self):
-        request = self.request.strip().split("\r\n")
+        request,body = self.request.strip().split("\r\n"*2)
+        request = request.split("\r\n")
         self.request = request[0]
         requestline = request[0].split()
         self.method = requestline[0]
@@ -102,7 +103,11 @@ class PostRequestHandler(RequestHandler):
         self.method = "POST"
     
     def _handleRequest(self, request: HTTPRequest) -> Status:
-        pass
+        if request.path.startswith("/files"):
+            msg = request.path[6:] #strip /files
+            _path = args.directory + msg
+            with open(_path,"w") as f:
+                f.write(request.body)
 
 def codeCraftersPost(request, args):
     pass
