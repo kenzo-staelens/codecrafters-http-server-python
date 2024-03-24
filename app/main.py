@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, KW_ONLY
 from typing import List, Dict
 import os
 import argparse
@@ -9,6 +9,7 @@ CODECRAFTERS = True
 RESPONSECODES = {
     200: "OK",
     404: "NOT FOUND",
+    415: "METHOD NOT ALLOWED",
     500: "INTERNAL SERVER ERROR"
 }
 
@@ -48,7 +49,49 @@ class HTTPResponse:
         return f"{self.status}{headers}\r\n\r\n{self.content}"
 
 class RequestHandler:
-    pass
+    def __new__(cls, args):
+        instance = super().__new__(cls)
+        instance.args = args
+        instance.method = None
+        return instance
+    
+    def handleRequest(self, request: HTTPRequest) -> Status:
+        if request.method !=self.method:
+            raise ValueError("not a GET method")
+        return self._handleRequest(request)
+
+@dataclass
+class HTTPRequestHandler:
+    methods: List[str] = None
+    _: KW_ONLY
+    args: argparse.Namespace = field(default_factory=argparse.Namespace)
+    handlers: Dict[str,RequestHandler] = field(default_factory=dict)
+    
+    def __post_init__(self):
+        if self.methods == None:
+            self.methods = ["GET"]
+        if "GET" in self.methods:
+            self.handlers["GET"]=GetRequestHandler(self.args)
+    
+    def handleRequest(self, request: HTTPRequest) -> Status:
+        handler = self.handlers.get(request.method)
+        if handler:
+            return handler.handleRequest(request)
+        return HTTPResponse(415)
+
+class GetRequestHandler(RequestHandler):
+    def __init__(self,args):
+        self.method = "GET"
+    
+    def _handleRequest(self, request: HTTPRequest) -> Status:
+        if request.path=="/":
+            resp = HTTPResponse(200)
+        elif CODECRAFTERS:
+            resp = codeCraftersResponse(request)
+        
+        if resp == None:
+            resp = HTTPResponse(404)
+        return resp
 
 def codeCraftersResponse(request):
     path = request.path
@@ -69,28 +112,14 @@ def codeCraftersResponse(request):
             "Content-Length": str(length)
         }
         resp = HTTPResponse(200,content=msg,**headers)
+    elif path.startswith("/files/"):
+        msg = request.path[6:] #strip /files
+        _path = self.args.directory + request.path.strip("/files")
+        if os.path.exists(_path):
+            headers = {"Content-Type":"application/octet-stream"}
+            with open(_path,"r") as f:
+                resp = HTTPResponse(200,content=f.read(),**headers)
     return resp
-
-class GetRequestHandler(RequestHandler):
-    def __init__(self, args):
-        self.args = args
-    
-    def handleRequest(self, request: HTTPRequest) -> Status:
-        if request.method !="GET":
-            raise ValueError("not a GET method")
-        if request.path=="/":
-            resp = HTTPResponse(200)
-        elif CODECRAFTERS:
-            resp = codeCraftersResponse(request)
-        if resp == None:
-            path = self.args.directory + request.path.strip("/files")
-            if os.path.exists(path):
-                headers = {"Content-Type":"application/octet-stream"}
-                with open(path,"r") as f:
-                    resp = HTTPResponse(200,content=f.read(),**headers)
-        if resp == None:
-            resp = HTTPResponse(404)
-        return resp
 
 class HandlerThread:
     def __init__(self,handler, conn, addr,args):
@@ -98,27 +127,29 @@ class HandlerThread:
             target=handler, args=(conn, addr,args)
         ).start()
 
-def handler(conn, addr,args):
-    getHandler = GetRequestHandler(args)
+def handler(conn, addr,requestHandler):
     with conn:
         data = conn.recv(1024).decode("utf-8")
         if data:
             req = HTTPRequest(data)
         try:
-            resp = getHandler.handleRequest(req)
+            resp = requestHandler.handleRequest(req)
         except Exception as e:
             print(e)
             resp = HTTPResponse(500, content=str(e))
         conn_sendall(conn, resp)
 
 def conn_sendall(conn, msg):
+    if type(msg)!=str:
+        raise ValueError("")
     conn.sendall(repr(msg).encode("utf-8"))
 
 def main(args):
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
+    requestHandler = HTTPRequestHandler(args=args)
     while True:
         conn, addr = server_socket.accept()
-        HandlerThread(handler, conn,addr,args)
+        HandlerThread(handler, conn,addr,requestHandler)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
