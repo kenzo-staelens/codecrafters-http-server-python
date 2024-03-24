@@ -22,7 +22,10 @@ class HTTPRequest:
     headers: List[str] = field(default_factory=list)
     
     def __post_init__(self):
-        request,body = self.request.strip().split("\r\n"*2)
+        try:
+            request,body = self.request.strip().split("\r\n"*2)
+        except:
+            request = self.request.strip()
         request = request.split("\r\n")
         self.request = request[0]
         requestline = request[0].split()
