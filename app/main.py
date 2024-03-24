@@ -159,7 +159,7 @@ def conn_sendall(conn, msg):
 
 def main(args):
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
-    requestHandler = HTTPRequestHandler(methods=["GET","POST"]args=args)
+    requestHandler = HTTPRequestHandler(methods=["GET","POST"],args=args)
     while True:
         conn, addr = server_socket.accept()
         HandlerThread(handler, conn,addr,requestHandler)
