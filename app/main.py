@@ -83,7 +83,7 @@ class GetRequestHandler(RequestHandler):
         elif CODECRAFTERS:
             resp = codeCraftersResponse(request)
         if resp == None:
-            path = self.args.directory + request.path
+            path = self.args.directory + request.path.strip("/files/")
             print(path)
             if os.path.exists(path):
                 print("ok")
