@@ -1,8 +1,27 @@
+from dataclasses import dataclass, field
+from typing import List
 import socket
 
+@dataclass
+class HTTPRequest:
+    request:str
+    method: str = None
+    path: str = None
+    version: str = None
+    headers: List[str] = field(default_factory=list)
+    
+    def __post_init__(self):
+        request = self.request.strip().split(b"\r\n")
+        self.request = request[0]
+        requestline = request[0].split()
+        self.method = requestline[0]
+        self.path = requestline[1]
+        self.version = requestline[1]
+        self.headers = request[1:]
+
+@dataclass
 class Status:
-    def __init__(self, code):
-        self.code = code
+    code: int
     
     def __repr__(self):
         return f"HTTP/1.1 {self.code}\r\n"
@@ -13,6 +32,21 @@ class HTTPResponse:
     
     def __repr__(self):
         return f"{self.status}\r\n"
+
+class RequestHandler:
+    pass
+
+class GetRequestHandler(RequestHandler):
+    def __init__(self):
+        pass
+    
+    def handleRequest(self, request: HTTPRequest) -> Status:
+        if request.method !="GET":
+            raise ValueError("not a GET method")
+        if request.path=="/":
+            return HTTPResponse(200)
+        
+        return HTTPResponse(404)
 
 def conn_sendall(conn, msg):
     conn.sendall(repr(msg).encode("utf-8"))
@@ -29,7 +63,8 @@ def main():
         print(f"Connected from {addr}")
         data = conn.recv(1024)
         if data:
-            pass
+            req = HTTPRequest(data)
+            print(req)
         conn_sendall(conn, HTTPResponse(200))
 
 
