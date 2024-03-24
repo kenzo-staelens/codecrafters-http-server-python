@@ -1,4 +1,5 @@
 from typing import List, Dict, Callable
+from .data import *
 
 class RequestHandler:
     def __new__(cls, args, codecraftersfn=None):
