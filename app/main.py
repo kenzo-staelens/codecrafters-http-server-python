@@ -8,6 +8,7 @@ import threading
 CODECRAFTERS = True
 RESPONSECODES = {
     200: "OK",
+    201: "CREATED",
     404: "NOT FOUND",
     415: "METHOD NOT ALLOWED",
     500: "INTERNAL SERVER ERROR"
@@ -93,7 +94,6 @@ class GetRequestHandler(RequestHandler):
     def _handleRequest(self, request: HTTPRequest) -> Status:
         if request.path=="/":
             resp = HTTPResponse(200)
-            print(resp)
         elif CODECRAFTERS:
             resp = codeCraftersGet(request,self.args)
         
@@ -106,14 +106,15 @@ class PostRequestHandler(RequestHandler):
         self.method = "POST"
     
     def _handleRequest(self, request: HTTPRequest) -> Status:
-        if request.path.startswith("/files"):
-            msg = request.path[6:] #strip /files
-            _path = args.directory + msg
-            with open(_path,"w") as f:
-                f.write(request.body)
+        codeCraftersPost(request,self.args)
 
 def codeCraftersPost(request, args):
-    pass
+    if request.path.startswith("/files"):
+        msg = request.path[6:] #strip /files
+        _path = args.directory + msg
+        with open(_path,"w") as f:
+            f.write(request.body)
+        return HTTPResponse(201)
 
 def codeCraftersGet(request,args):
     path = request.path
