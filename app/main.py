@@ -123,5 +123,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory')
     args = parser.parse_args()
-    args.directory = args.directory[:-1] # remove last /
+    if args.directory!=None:
+        args.directory = args.directory[:-1] # remove last /
     main(args)
