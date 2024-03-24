@@ -52,12 +52,12 @@ functiondict = {
 }
 
 class HandlerThread:
-    def __init__(self, conn, addr,args):
+    def __init__(self, conn, addr, args):
         self.thread = threading.Thread(
             target=self.handler, args=(conn, addr,args)
         ).start()
     
-    def handler(con, addr, requestHandler):
+    def handler(_,conn, addr, requestHandler):
         with conn:
             data = conn.recv(1024).decode("utf-8")
             if data:
