@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Dict
 import socket
+import threading
 
 CODECRAFTERS = True
 RESPONSECODES = {
@@ -83,6 +84,24 @@ class GetRequestHandler(RequestHandler):
             resp = HTTPResponse(404)
         return resp
 
+class HandlerThread:
+    def __init__(self,handler, conn, addr):
+        self.thread = threading.Thread(
+            target=handleRequest, args=(conn, addr)
+        ).start()
+
+def handler(conn, addr):
+    with conn:
+        data = conn.recv(1024)
+        print("*"*20,addr,data)
+        if data:
+            req = HTTPRequest(data)
+        try:
+            response = GetRequestHandler.handleRequest(req)
+        except Exception as e:
+            resp = HTTPResponse(500, content=str(e))
+        conn_sendall(conn, response)
+
 def conn_sendall(conn, msg):
     conn.sendall(repr(msg).encode("utf-8"))
 
@@ -90,16 +109,7 @@ def main():
     server_socket = socket.create_server(("localhost", 4221))#, reuse_port=True)
     while True:
         conn, addr = server_socket.accept()
-        with conn:
-            data = conn.recv(1024)
-            print("*"*20,addr,data)
-            if data:
-                req = HTTPRequest(data)
-            try:
-                response = GetRequestHandler.handleRequest(req)
-            except Exception as e:
-                resp = HTTPResponse(500, content=str(e))
-            conn_sendall(conn, response)
+        HandlerThread(handler, conn,addr)
 
 if __name__ == "__main__":
     main()
