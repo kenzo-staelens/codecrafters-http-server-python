@@ -2,9 +2,9 @@ import os
 import argparse
 import socket
 import threading
-from dataclasses import dataclass, field, KW_ONLY
 from typing import List, Dict
 from .requesthandlers import *
+from .data import *
 
 
 CODECRAFTERS = True
