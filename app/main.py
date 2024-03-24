@@ -3,8 +3,8 @@ import argparse
 import socket
 import threading
 from typing import List, Dict
-from requesthandlers import *
-from data import *
+from .requesthandlers import *
+from .data import *
 
 
 CODECRAFTERS = True
