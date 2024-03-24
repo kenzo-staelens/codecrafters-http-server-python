@@ -66,9 +66,9 @@ class GetRequestHandler(RequestHandler):
     def handleRequest(self, request: HTTPRequest) -> Status:
         if request.method !="GET":
             raise ValueError("not a GET method")
-        if request.path==b"/":
+        if request.path=="/":
             return HTTPResponse(200)
-        if CODECRAFTERS:
+        if CODECRAFTERS and path.startswith("/echo/"):
             return codeCraftersResponse(request)
         
         return HTTPResponse(404)
