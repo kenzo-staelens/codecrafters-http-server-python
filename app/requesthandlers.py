@@ -1,5 +1,5 @@
 from typing import List, Dict, Callable
-from data import *
+from .data import *
 import argparse
 
 class RequestHandler:
