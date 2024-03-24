@@ -37,12 +37,11 @@ class RequestHandler:
     pass
 
 class GetRequestHandler(RequestHandler):
-    def __init__(self):
-        pass
-    
+    @classmethod
     def handleRequest(self, request: HTTPRequest) -> Status:
         if request.method !=b"GET":
             raise ValueError("not a GET method")
+        print(request.path, request.path==b"/","*"*20)
         if request.path==b"/":
             return HTTPResponse(200)
         
@@ -64,8 +63,11 @@ def main():
         data = conn.recv(1024)
         if data:
             req = HTTPRequest(data)
-            print(req)
-        conn_sendall(conn, HTTPResponse(200))
+        try:
+            response = GetRequestHandler.handleRequest(req)
+        except:
+            response = HTTPResponse(500)
+        conn_sendall(conn, response)
 
 
 if __name__ == "__main__":
