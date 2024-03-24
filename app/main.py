@@ -140,7 +140,7 @@ def handler(conn, addr,requestHandler):
         conn_sendall(conn, resp)
 
 def conn_sendall(conn, msg):
-    if type(msg)!=str:
+    if type(msg)!=HTTPResponse:
         raise ValueError("")
     conn.sendall(repr(msg).encode("utf-8"))
 
